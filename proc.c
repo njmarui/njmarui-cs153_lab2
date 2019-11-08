@@ -7,6 +7,7 @@
 #include "proc.h"
 #include "spinlock.h"
 
+
 struct {
   struct spinlock lock;
   struct proc proc[NPROC];
@@ -322,9 +323,12 @@ wait(void)
 void
 scheduler(void)
 {
+
   struct proc *p;
   struct cpu *c = mycpu();
   c->proc = 0;
+  
+  int highestPriority = 0;
   
   for(;;){
     // Enable interrupts on this processor.
@@ -332,24 +336,38 @@ scheduler(void)
 
     // Loop over process table looking for process to run.
     acquire(&ptable.lock);
+    
+    highestPriority = 31;
+    
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
       if(p->state != RUNNABLE)
         continue;
+	  if(p->priority < highestPriority){
+			highestPriority = p->priority;
+	  }
+	}
+	
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+      if(p->state != RUNNABLE)
+        continue;
+	  
+	    if(p->priority == highestPriority){
+        // Switch to chosen process.  It is the process's job
+        // to release ptable.lock and then reacquire it
+        // before jumping back to us.
+        c->proc = p;
+        switchuvm(p);
+        p->state = RUNNING;
 
-      // Switch to chosen process.  It is the process's job
-      // to release ptable.lock and then reacquire it
-      // before jumping back to us.
-      c->proc = p;
-      switchuvm(p);
-      p->state = RUNNING;
+        swtch(&(c->scheduler), p->context);
+        switchkvm();
 
-      swtch(&(c->scheduler), p->context);
-      switchkvm();
-
-      // Process is done running for now.
-      // It should have changed its p->state before coming back.
-      c->proc = 0;
+        // Process is done running for now.
+        // It should have changed its p->state before coming back.
+        c->proc = 0;
+	    }
     }
+    
     release(&ptable.lock);
 
   }
@@ -532,3 +550,17 @@ procdump(void)
     cprintf("\n");
   }
 }
+
+//lab2
+void
+setpriority(int priority)
+{
+  struct proc *curproc = myproc();
+  
+  curproc->priority = priority;
+  
+  cprintf("in setpri\n");
+  
+  //return 0;
+}
+//lab2

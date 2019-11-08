@@ -89,3 +89,16 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
+
+
+//lab2 
+int 
+sys_setpriority(void){
+	int priority;
+	if(argint(0, &priority) < 0){
+		return -1;
+	}
+	setpriority(priority);
+	return 0;
+}
+//lab2
