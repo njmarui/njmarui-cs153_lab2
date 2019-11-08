@@ -557,6 +557,10 @@ setpriority(int priority)
 {
   struct proc *curproc = myproc();
   
-  curproc->priority = priority;
+  if(priority <= 31 && priority >= 0){
+	curproc->priority = priority;
+  }else{
+	curproc->priority = 10;
+  }
 }
 //lab2
