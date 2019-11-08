@@ -558,9 +558,5 @@ setpriority(int priority)
   struct proc *curproc = myproc();
   
   curproc->priority = priority;
-  
-  cprintf("in setpri\n");
-  
-  //return 0;
 }
 //lab2
